@@ -28,7 +28,7 @@ class StudentsTab extends StatelessWidget {
               final student = students[index];
               return ListTile(
                 title: Text('${student['name']} ${student['surname']}'),
-                subtitle: Text('Класс: ${student['class']}, Школа: ${student['numberschool']}'),
+                subtitle: Text('Класс: ${student['class']}, Школа №${student['numberschool']}'),
               );
             },
           );

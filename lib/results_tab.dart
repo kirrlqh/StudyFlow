@@ -12,18 +12,18 @@ class _ResultsTabState extends State<ResultsTab> {
   List<Map<String, dynamic>> filteredResults = []; // Отфильтрованные результаты
   bool isLoading = true; // Состояние загрузки данных
 
-  // Функция для получения фамилий студентов
+  // Функция для получения имени и фамилии студентов
   Future<String> fetchStudentName(int studentId) async {
     final response = await Supabase.instance.client
         .from('students')
-        .select('surname')
+        .select('name, surname') // Извлекаем имя и фамилию
         .eq('id', studentId)
         .single();
 
-    if (response != null && response['surname'] != null) {
-      return response['surname'];
+    if (response != null && response['name'] != null && response['surname'] != null) {
+      return '${response['surname']} ${response['name']}'; // Возвращаем фамилию и имя
     } else {
-      return 'Неизвестно'; // Если фамилия не найдена
+      return 'Неизвестно'; // Если имя или фамилия не найдены
     }
   }
 
@@ -41,7 +41,7 @@ class _ResultsTabState extends State<ResultsTab> {
           final studentName = await fetchStudentName(result['studentid']);
           fetchedResults.add({
             'id': result['id'],
-            'student': studentName, // Добавляем фамилию студента
+            'student': studentName, // Добавляем фамилию и имя студента
             'score': result['score'],
             'numberschool': result['numberschool'],
             'dateevent': result['dateevent'],
@@ -95,7 +95,7 @@ class _ResultsTabState extends State<ResultsTab> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    labelText: 'Поиск по фамилии студента',
+                    labelText: 'Поиск по фамилии или имени студента',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -123,7 +123,7 @@ class _ResultsTabState extends State<ResultsTab> {
                 child: ListTile(
                   title: Text(result['student'] ?? 'Неизвестно'),
                   subtitle: Text(
-                    'Школа: ${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
+                    'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
                   ),
                 ),
               );

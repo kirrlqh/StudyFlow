@@ -31,7 +31,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Студенты'),
+            Tab(text: 'Ученики'),
             Tab(text: 'Школы'),
             Tab(text: 'Результаты'),
           ],
