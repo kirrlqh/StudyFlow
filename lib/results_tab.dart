@@ -84,71 +84,73 @@ class _ResultsTabState extends State<ResultsTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Результаты студентов'),
-        backgroundColor: Colors.deepPurple,
+        title: Text('Результаты студентов', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _filterResults,
-                    decoration: InputDecoration(
-                      hintText: 'Поиск по фамилии или имени...',
-                      labelText: 'Поиск',
-                      prefixIcon: Icon(Icons.search, color: Colors.deepPurple),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                        borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                        borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
-                      ),
-                    ),
+      body: Container(
+        color: Colors.black,
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _filterResults,
+                style: TextStyle(color: Colors.white),
+                cursorColor: Colors.blueAccent, // Цвет курсора
+                decoration: InputDecoration(
+                  hintText: 'Поиск по фамилии или имени...',
+                  hintStyle: TextStyle(color: Colors.white70),
+                  labelText: 'Поиск',
+                  labelStyle: TextStyle(color: Colors.white),
+                  prefixIcon: Icon(Icons.search, color: Colors.white),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: Colors.white, width: 2),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: Colors.blueAccent, width: 2),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          Expanded(
-            child: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : (filteredResults.isEmpty
-                ? Center(child: Text('Нет данных.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)))
-                : ListView.builder(
-              itemCount: filteredResults.length,
-              itemBuilder: (context, index) {
-                final result = filteredResults[index];
-                return Card(
-                  elevation: 5,
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    title: Text(
-                      result['student'] ?? 'Неизвестно',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            Expanded(
+              child: isLoading
+                  ? Center(child: CircularProgressIndicator(color: Colors.white))
+                  : (filteredResults.isEmpty
+                  ? Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold)))
+                  : ListView.builder(
+                itemCount: filteredResults.length,
+                itemBuilder: (context, index) {
+                  final result = filteredResults[index];
+                  return Card(
+                    elevation: 8,
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    color: Colors.grey[850],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    subtitle: Text(
-                      'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      title: Text(
+                        result['student'] ?? 'Неизвестно',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
+                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                      ),
+                      leading: Icon(Icons.school, color: Colors.white),
                     ),
-                    tileColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    leading: Icon(Icons.school, color: Colors.deepPurple),
-                  ),
-                );
-              },
-            )),
-          ),
-        ],
+                  );
+                },
+              )),
+            ),
+          ],
+        ),
       ),
     );
   }

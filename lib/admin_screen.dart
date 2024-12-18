@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_screen.dart';
 
 class AdminScreen extends StatelessWidget {
   @override
@@ -7,9 +8,26 @@ class AdminScreen extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        backgroundColor: Colors.black, // Темный фон страницы
         appBar: AppBar(
-          title: Text('Админ панель'),
+          backgroundColor: Colors.grey[850], // Темный фон AppBar
+          title: Text('Админ панель', style: TextStyle(color: Colors.white)), // Белый текст
+          actions: [
+            // Кнопка для возврата на страницу авторизации
+            IconButton(
+              icon: Icon(Icons.exit_to_app, color: Colors.white), // Белая иконка
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+            ),
+          ],
           bottom: TabBar(
+            labelColor: Colors.white, // Белый цвет текста для вкладок
+            unselectedLabelColor: Colors.grey, // Серый цвет для невыбранных вкладок
+            indicatorColor: Colors.blue, // Зеленая индикаторная линия
             tabs: [
               Tab(text: 'Ученики'),
               Tab(text: 'Результаты'),
@@ -85,24 +103,74 @@ class _StudentsTabState extends State<StudentsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildTab(
-      context,
-      students,
-          (item) => '${item['name']} ${item['surname']}',
-          (item) => 'Класс: ${item['class']}, Школа: ${item['numberschool']}',
-          () => _showAddDialog(
-        context,
-        'Добавить ученика',
-        {'name': '', 'surname': '', 'class': '', 'numberschool': ''},
-        addStudent,
+    return Scaffold(
+      backgroundColor: Colors.black, // Темный фон страницы
+      appBar: AppBar(
+        title: Text('Ученики', style: TextStyle(color: Colors.white)), // Белый текст на AppBar
+        backgroundColor: Colors.grey[900], // Темный AppBar
       ),
-          (item) => _showEditDialog(
-        context,
-        'Редактировать ученика',
-        item,
-        editStudent,
+      body: FutureBuilder<List<dynamic>>(
+        future: students,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
+          } else if (snapshot.hasData) {
+            final studentList = snapshot.data!;
+            return ListView.builder(
+              itemCount: studentList.length,
+              itemBuilder: (context, index) {
+                final student = studentList[index];
+                return Card(
+                  color: Colors.grey[850], // Темный фон карточки
+                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  child: ListTile(
+                    title: Text(
+                      '${student['name']} ${student['surname']}',
+                      style: TextStyle(color: Colors.white), // Белый текст
+                    ),
+                    subtitle: Text(
+                      'Класс: ${student['class']} | Школа: ${student['numberschool']}',
+                      style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue), // Голубая иконка редактирования
+                          onPressed: () {
+                            _showEditDialog(context, 'Редактировать ученика', student, editStudent);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
+                          onPressed: () => deleteStudent(student['id']),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _showEditDialog(context, 'Редактировать ученика', student, editStudent);
+                    },
+                  ),
+                );
+              },
+            );
+          } else {
+            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
+          }
+        },
       ),
-      deleteStudent,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddDialog(
+          context,
+          'Добавить ученика',
+          {'name': '', 'surname': '', 'class': '', 'numberschool': ''},
+          addStudent,
+        ),
+        backgroundColor: Colors.blueAccent, // Яркий цвет для кнопки добавления
+        child: Icon(Icons.add),
+      ),
     );
   }
 
@@ -121,14 +189,15 @@ class _StudentsTabState extends State<StudentsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(title),
+              backgroundColor: Colors.grey[850], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
               content: FutureBuilder<List<dynamic>>(
                 future: schools,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
                   } else if (snapshot.hasError) {
-                    return Text('Ошибка: ${snapshot.error}');
+                    return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
                   } else if (snapshot.hasData) {
                     final schoolList = snapshot.data!;
                     return SingleChildScrollView(
@@ -137,24 +206,27 @@ class _StudentsTabState extends State<StudentsTab> {
                         children: [
                           TextField(
                             controller: controllers['name'],
-                            decoration: InputDecoration(labelText: 'Имя'),
+                            decoration: InputDecoration(labelText: 'Имя', labelStyle: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['surname'],
-                            decoration: InputDecoration(labelText: 'Фамилия'),
+                            decoration: InputDecoration(labelText: 'Фамилия', labelStyle: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['class'],
-                            decoration: InputDecoration(labelText: 'Класс'),
+                            decoration: InputDecoration(labelText: 'Класс', labelStyle: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Colors.white),
                           ),
                           DropdownButton<int>(
                             isExpanded: true,
-                            hint: Text('Выберите школу'),
+                            hint: Text('Выберите школу', style: TextStyle(color: Colors.white)),
                             value: selectedSchool,
                             items: schoolList.map((school) {
                               return DropdownMenuItem<int>(
                                 value: school['id'],
-                                child: Text('Школа №${school['number']}'),
+                                child: Text('Школа №${school['number']}', style: TextStyle(color: Colors.white)),
                               );
                             }).toList(),
                             onChanged: (int? value) {
@@ -162,19 +234,21 @@ class _StudentsTabState extends State<StudentsTab> {
                                 selectedSchool = value;
                               });
                             },
+                            dropdownColor: Colors.grey[850], // Темный фон для выпадающего списка
+                            style: TextStyle(color: Colors.white), // Белый текст в списке
                           ),
                         ],
                       ),
                     );
                   } else {
-                    return Text('Нет данных.');
+                    return Text('Нет данных.', style: TextStyle(color: Colors.white));
                   }
                 },
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена'),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
@@ -196,7 +270,7 @@ class _StudentsTabState extends State<StudentsTab> {
                     // Закрываем диалог
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить'),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             );
@@ -225,14 +299,15 @@ class _StudentsTabState extends State<StudentsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(title),
+              backgroundColor: Colors.grey[850], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
               content: FutureBuilder<List<dynamic>>(
                 future: schools,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
                   } else if (snapshot.hasError) {
-                    return Text('Ошибка: ${snapshot.error}');
+                    return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
                   } else if (snapshot.hasData) {
                     final schoolList = snapshot.data!;
                     return SingleChildScrollView(
@@ -241,15 +316,18 @@ class _StudentsTabState extends State<StudentsTab> {
                         children: [
                           TextField(
                             controller: controllers['name'],
-                            decoration: InputDecoration(labelText: 'Имя'),
+                            decoration: InputDecoration(labelText: 'Имя', labelStyle: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['surname'],
-                            decoration: InputDecoration(labelText: 'Фамилия'),
+                            decoration: InputDecoration(labelText: 'Фамилия', labelStyle: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['class'],
-                            decoration: InputDecoration(labelText: 'Класс'),
+                            decoration: InputDecoration(labelText: 'Класс', labelStyle: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Colors.white),
                           ),
                           DropdownButton<int>(
                             isExpanded: true,
@@ -257,7 +335,7 @@ class _StudentsTabState extends State<StudentsTab> {
                             items: schoolList.map((school) {
                               return DropdownMenuItem<int>(
                                 value: school['id'],
-                                child: Text('Школа №${school['number']}'),
+                                child: Text('Школа №${school['number']}', style: TextStyle(color: Colors.white)),
                               );
                             }).toList(),
                             onChanged: (int? value) {
@@ -265,19 +343,21 @@ class _StudentsTabState extends State<StudentsTab> {
                                 selectedSchool = value;
                               });
                             },
+                            dropdownColor: Colors.grey[850], // Темный фон для выпадающего списка
+                            style: TextStyle(color: Colors.white), // Белый текст в списке
                           ),
                         ],
                       ),
                     );
                   } else {
-                    return Text('Нет данных.');
+                    return Text('Нет данных.', style: TextStyle(color: Colors.white));
                   }
                 },
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена'),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
@@ -299,7 +379,7 @@ class _StudentsTabState extends State<StudentsTab> {
                     // Закрываем диалог
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить'),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             );
@@ -309,8 +389,6 @@ class _StudentsTabState extends State<StudentsTab> {
     );
   }
 }
-
-
 
 /// ------------------- Вкладка "Результаты" -------------------
 class ResultsTab extends StatefulWidget {
@@ -324,7 +402,7 @@ class _ResultsTabState extends State<ResultsTab> {
   Future<List<dynamic>> fetchResults() async {
     final response = await Supabase.instance.client
         .from('results')
-        .select('''
+        .select(''' 
         id, 
         score, 
         dateevent, 
@@ -371,26 +449,74 @@ class _ResultsTabState extends State<ResultsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildTab(
-      context,
-      results,
-          (item) =>
-      'Результат: ${item['score']} | Ученик: ${item['student']['name']} ${item['student']['surname']}',
-          (item) =>
-      'Дата: ${item['dateevent']} | Предмет: ${item['subject']} | Школа: ${item['numberschool']['number']}',
-          () => _showAddDialog(
-        context,
-        'Добавить результат',
-        {'score': '', 'dateevent': '', 'subject': ''},
-        addResult,
+    return Scaffold(
+      backgroundColor: Colors.black, // Темный фон страницы
+      appBar: AppBar(
+        title: Text('Результаты', style: TextStyle(color: Colors.white)), // Белый текст на AppBar
+        backgroundColor: Colors.grey[900], // Темный AppBar
       ),
-          (item) => _showEditDialog(
-        context,
-        'Редактировать результат',
-        item,
-        editResult,
+      body: FutureBuilder<List<dynamic>>(
+        future: results,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
+          } else if (snapshot.hasData) {
+            final resultList = snapshot.data!;
+            return ListView.builder(
+              itemCount: resultList.length,
+              itemBuilder: (context, index) {
+                final result = resultList[index];
+                return Card(
+                  color: Colors.grey[850], // Темный фон карточки
+                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  child: ListTile(
+                    title: Text(
+                      'Результат: ${result['score']} | Ученик: ${result['student']['name']} ${result['student']['surname']}',
+                      style: TextStyle(color: Colors.white), // Белый текст
+                    ),
+                    subtitle: Text(
+                      'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа: ${result['numberschool']['number']}',
+                      style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue), // Кнопка редактирования
+                          onPressed: () {
+                            _showEditDialog(context, 'Редактировать результат', result, editResult);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
+                          onPressed: () => deleteResult(result['id']),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _showEditDialog(context, 'Редактировать результат', result, editResult);
+                    },
+                  ),
+                );
+              },
+            );
+          } else {
+            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
+          }
+        },
       ),
-      deleteResult,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddDialog(
+          context,
+          'Добавить результат',
+          {'score': '', 'dateevent': '', 'subject': ''},
+          addResult,
+        ),
+        backgroundColor: Colors.blueAccent, // Яркая кнопка добавления
+        child: Icon(Icons.add),
+      ),
     );
   }
 
@@ -401,8 +527,6 @@ class _ResultsTabState extends State<ResultsTab> {
       Function(Map<String, dynamic>) onSave,
       ) {
     final controllers = fields.map((key, _) => MapEntry(key, TextEditingController()));
-    int? selectedStudent;
-    int? selectedSchool;
 
     showDialog(
       context: context,
@@ -410,90 +534,26 @@ class _ResultsTabState extends State<ResultsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(title),
+              backgroundColor: Colors.grey[850], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controllers['score'],
-                      decoration: InputDecoration(labelText: 'Оценка'),
+                      decoration: InputDecoration(labelText: 'Результат', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['dateevent'],
-                      decoration: InputDecoration(labelText: 'Дата'),
+                      decoration: InputDecoration(labelText: 'Дата события', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['subject'],
-                      decoration: InputDecoration(labelText: 'Предмет'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Выберите ученика',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    FutureBuilder<List<dynamic>>(
-                      future: Supabase.instance.client
-                          .from('students')
-                          .select()
-                          .then((value) => value as List<dynamic>),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
-                        }
-                        return DropdownButton<int>(
-                          isExpanded: true,
-                          value: selectedStudent,
-                          hint: Text('Выберите ученика'),
-                          items: snapshot.data!.map((student) {
-                            return DropdownMenuItem<int>(
-                              value: student['id'],
-                              child: Text('${student['name']} ${student['surname']}'),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedStudent = value;
-                            });
-                          },
-                        );
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Выберите школу',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    FutureBuilder<List<dynamic>>(
-                      future: Supabase.instance.client
-                          .from('schools')
-                          .select()
-                          .then((value) => value as List<dynamic>),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
-                        }
-                        return DropdownButton<int>(
-                          isExpanded: true,
-                          value: selectedSchool,
-                          hint: Text('Выберите школу'),
-                          items: snapshot.data!.map((school) {
-                            return DropdownMenuItem<int>(
-                              value: school['id'],
-                              child: Text('Школа №${school['number']}'),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedSchool = value;
-                            });
-                          },
-                        );
-                      },
+                      decoration: InputDecoration(labelText: 'Предмет', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
@@ -501,21 +561,19 @@ class _ResultsTabState extends State<ResultsTab> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена'),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
-                    final data = {
-                      'score': controllers['score']!.text,
-                      'dateevent': controllers['dateevent']!.text,
-                      'subject': controllers['subject']!.text,
-                      'studentid': selectedStudent,
-                      'numberschool': selectedSchool,
-                    };
+                    final data = controllers.map((key, controller) => MapEntry(key, controller.text));
+
+                    // Вызываем сохранение
                     onSave(data);
+
+                    // Закрываем диалог
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить'),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             );
@@ -536,8 +594,6 @@ class _ResultsTabState extends State<ResultsTab> {
       'dateevent': TextEditingController(text: item['dateevent']),
       'subject': TextEditingController(text: item['subject']),
     };
-    int? selectedStudent = item['student']['id'];
-    int? selectedSchool = item['numberschool']['id'];
 
     showDialog(
       context: context,
@@ -545,88 +601,26 @@ class _ResultsTabState extends State<ResultsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(title),
+              backgroundColor: Colors.grey[850], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controllers['score'],
-                      decoration: InputDecoration(labelText: 'Оценка'),
+                      decoration: InputDecoration(labelText: 'Результат', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['dateevent'],
-                      decoration: InputDecoration(labelText: 'Дата'),
+                      decoration: InputDecoration(labelText: 'Дата события', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['subject'],
-                      decoration: InputDecoration(labelText: 'Предмет'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Выберите ученика',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    FutureBuilder<List<dynamic>>(
-                      future: Supabase.instance.client
-                          .from('students')
-                          .select()
-                          .then((value) => value as List<dynamic>),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
-                        }
-                        return DropdownButton<int>(
-                          isExpanded: true,
-                          value: selectedStudent,
-                          items: snapshot.data!.map((student) {
-                            return DropdownMenuItem<int>(
-                              value: student['id'],
-                              child: Text('${student['name']} ${student['surname']}'),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedStudent = value;
-                            });
-                          },
-                        );
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Выберите школу',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    FutureBuilder<List<dynamic>>(
-                      future: Supabase.instance.client
-                          .from('schools')
-                          .select()
-                          .then((value) => value as List<dynamic>),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
-                        }
-                        return DropdownButton<int>(
-                          isExpanded: true,
-                          value: selectedSchool,
-                          items: snapshot.data!.map((school) {
-                            return DropdownMenuItem<int>(
-                              value: school['id'],
-                              child: Text('Школа №${school['number']}'),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedSchool = value;
-                            });
-                          },
-                        );
-                      },
+                      decoration: InputDecoration(labelText: 'Предмет', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
@@ -634,21 +628,19 @@ class _ResultsTabState extends State<ResultsTab> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена'),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
-                    final data = {
-                      'score': controllers['score']!.text,
-                      'dateevent': controllers['dateevent']!.text,
-                      'subject': controllers['subject']!.text,
-                      'studentid': selectedStudent,
-                      'numberschool': selectedSchool,
-                    };
+                    final data = controllers.map((key, controller) => MapEntry(key, controller.text));
+
+                    // Вызываем сохранение
                     onSave(item['id'], data);
+
+                    // Закрываем диалог
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить'),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             );
@@ -706,27 +698,198 @@ class _SchoolsTabState extends State<SchoolsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildTab(
-      context,
-      schools,
-          (item) => 'Школа №${item['number']}',
-          (item) => 'Адрес: ${item['address']}',
-          () => _showAddDialog(
-        context,
-        'Добавить школу',
-        {'number': '', 'address': ''},
-        addSchool,
+    return Scaffold(
+      backgroundColor: Colors.black, // Темный фон страницы
+      appBar: AppBar(
+        title: Text('Школы', style: TextStyle(color: Colors.white)), // Белый текст на AppBar
+        backgroundColor: Colors.grey[900],
       ),
-          (item) => _showEditDialog(
-        context,
-        'Редактировать школу',
-        item,
-        editSchool,
+      body: FutureBuilder<List<dynamic>>(
+        future: schools,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
+          } else if (snapshot.hasData) {
+            final schoolList = snapshot.data!;
+            return ListView.builder(
+              itemCount: schoolList.length,
+              itemBuilder: (context, index) {
+                final school = schoolList[index];
+                return Card(
+                  color: Colors.grey[800], // Темный фон карточки
+                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  child: ListTile(
+                    title: Text(
+                      'Школа №${school['number']}',
+                      style: TextStyle(color: Colors.white), // Белый текст
+                    ),
+                    subtitle: Text(
+                      'Адрес: ${school['address']}',
+                      style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min, // Ограничивает ширину
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue), // Иконка редактирования
+                          onPressed: () {
+                            _showEditDialog(context, 'Редактировать школу', school, editSchool);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
+                          onPressed: () => deleteSchool(school['id']),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _showEditDialog(context, 'Редактировать школу', school, editSchool);
+                    },
+                  ),
+
+                );
+              },
+            );
+          } else {
+            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
+          }
+        },
       ),
-      deleteSchool,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddDialog(
+          context,
+          'Добавить школу',
+          {'number': '', 'address': ''},
+          addSchool,
+        ),
+        backgroundColor: Colors.blueAccent,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showAddDialog(
+      BuildContext context,
+      String title,
+      Map<String, dynamic> fields,
+      Function(Map<String, dynamic>) onSave,
+      ) {
+    final controllers = fields.map((key, _) => MapEntry(key, TextEditingController()));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[800], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controllers['number'],
+                      decoration: InputDecoration(labelText: 'Номер школы', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    TextField(
+                      controller: controllers['address'],
+                      decoration: InputDecoration(labelText: 'Адрес школы', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final data = controllers.map((key, controller) => MapEntry(key, controller.text));
+
+                    // Вызываем сохранение
+                    onSave(data);
+
+                    // Закрываем диалог
+                    Navigator.pop(context);
+                  },
+                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(
+      BuildContext context,
+      String title,
+      Map<String, dynamic> item,
+      Function(int, Map<String, dynamic>) onSave,
+      ) {
+    final controllers = {
+      'number': TextEditingController(text: item['number'].toString()),
+      'address': TextEditingController(text: item['address']),
+    };
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[800], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controllers['number'],
+                      decoration: InputDecoration(labelText: 'Номер школы', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    TextField(
+                      controller: controllers['address'],
+                      decoration: InputDecoration(labelText: 'Адрес школы', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final data = controllers.map((key, controller) => MapEntry(key, controller.text));
+
+                    // Вызываем сохранение
+                    onSave(item['id'], data);
+
+                    // Закрываем диалог
+                    Navigator.pop(context);
+                  },
+                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
+
 
 /// ------------------- Общие виджеты -------------------
 Widget _buildTab(
@@ -739,46 +902,60 @@ Widget _buildTab(
     void Function(int) onDelete,
     ) {
   return Scaffold(
+    backgroundColor: Colors.grey[900], // Темный фон страницы
     body: FutureBuilder<List<dynamic>>(
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('Ошибка: ${snapshot.error}'));
+          return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
         } else if (snapshot.hasData) {
           final items = snapshot.data!;
           return ListView.builder(
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return ListTile(
-                title: Text(titleBuilder(item)),
-                subtitle: Text(subtitleBuilder(item)),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () => onEdit(item),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => onDelete(item['id']),
-                    ),
-                  ],
+              return Card(
+                color: Colors.grey[800], // Темный фон карточки
+                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                elevation: 5,
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  title: Text(
+                    titleBuilder(item),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white), // Белый текст
+                  ),
+                  subtitle: Text(
+                    subtitleBuilder(item),
+                    style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blueAccent),
+                        onPressed: () => onEdit(item),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () => onDelete(item['id']),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           );
         } else {
-          return Center(child: Text('Нет данных.'));
+          return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
         }
       },
     ),
     floatingActionButton: FloatingActionButton(
       onPressed: onAdd,
       child: Icon(Icons.add),
+      backgroundColor: Colors.greenAccent, // Яркий зеленый для кнопки добавления
     ),
   );
 }
@@ -790,24 +967,31 @@ void _showAddDialog(
     Function(Map<String, dynamic>) onSave,
     ) {
   final controllers = fields.map((key, _) => MapEntry(key, TextEditingController()));
+
   showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(title),
+        backgroundColor: Colors.grey[800], // Темный фон диалога
+        title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: fields.keys.map((key) {
             return TextField(
               controller: controllers[key],
-              decoration: InputDecoration(labelText: key),
+              decoration: InputDecoration(
+                labelText: key,
+                labelStyle: TextStyle(color: Colors.white), // Белая метка
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueAccent)),
+              ),
+              style: TextStyle(color: Colors.white), // Белый текст
             );
           }).toList(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Отмена'),
+            child: Text('Отмена', style: TextStyle(color: Colors.white)),
           ),
           TextButton(
             onPressed: () {
@@ -815,7 +999,7 @@ void _showAddDialog(
               onSave(data);
               Navigator.pop(context);
             },
-            child: Text('Сохранить'),
+            child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
           ),
         ],
       );
@@ -830,24 +1014,31 @@ void _showEditDialog(
     Function(int, Map<String, dynamic>) onSave,
     ) {
   final controllers = item.map((key, value) => MapEntry(key, TextEditingController(text: value.toString())));
+
   showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(title),
+        backgroundColor: Colors.grey[800], // Темный фон диалога
+        title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: item.keys.map((key) {
             return TextField(
               controller: controllers[key],
-              decoration: InputDecoration(labelText: key),
+              decoration: InputDecoration(
+                labelText: key,
+                labelStyle: TextStyle(color: Colors.white), // Белая метка
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueAccent)),
+              ),
+              style: TextStyle(color: Colors.white), // Белый текст
             );
           }).toList(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Отмена'),
+            child: Text('Отмена', style: TextStyle(color: Colors.white)),
           ),
           TextButton(
             onPressed: () {
@@ -855,10 +1046,39 @@ void _showEditDialog(
               onSave(item['id'], data);
               Navigator.pop(context);
             },
-            child: Text('Сохранить'),
+            child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
           ),
         ],
       );
     },
   );
 }
+
+/// ------------------- Обновления для выпадающих списков -------------------
+
+Widget _buildDropdownButton(
+    {required String label,
+      required String value,
+      required List<String> options,
+      required Function(String) onChanged}) {
+  return DropdownButtonFormField<String>(
+    value: value,
+    onChanged: (newValue) => onChanged(newValue!),
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.white), // Белая метка
+      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueAccent)), // Синий бордер при фокусе
+    ),
+    dropdownColor: Colors.grey[850], // Темный фон выпадающего списка
+    style: TextStyle(color: Colors.white), // Белый текст в списке
+    items: options
+        .map((option) => DropdownMenuItem<String>(
+      value: option,
+      child: Text(option),
+    ))
+        .toList(),
+  );
+}
+
+
+

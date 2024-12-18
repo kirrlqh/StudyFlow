@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/admin_screen.dart';
 import 'package:untitled/curator_screen.dart';
 import 'package:untitled/main_screen.dart';
-import 'package:untitled/supabase_service.dart'; // Проверьте путь или уберите, если уже импортировано
+import 'package:untitled/supabase_service.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -74,59 +74,165 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Вход')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      backgroundColor: Colors.grey[900], // Темный серый фон
+      appBar: AppBar(
+        backgroundColor: Colors.grey[850], // Более светлый черный фон для AppBar
+        title: Text(
+          'Авторизация',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+            _buildLogo(),
+            SizedBox(height: 40),
+            _buildTextField(
               controller: _loginController,
-              decoration: InputDecoration(labelText: 'Логин'),
+              label: 'Логин',
+              icon: Icons.person,
+              obscureText: false,
             ),
-            TextField(
+            SizedBox(height: 20),
+            _buildTextField(
               controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Пароль',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordHidden ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordHidden = !_isPasswordHidden;
-                    });
-                  },
-                ),
-              ),
+              label: 'Пароль',
+              icon: Icons.lock,
               obscureText: _isPasswordHidden,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordHidden ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white, // Белая иконка видимости
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordHidden = !_isPasswordHidden;
+                  });
+                },
+              ),
             ),
             if (errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
                   errorMessage!,
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.redAccent, fontSize: 14),
                 ),
               ),
+            SizedBox(height: 24),
+            _buildLoginButton(),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _login,
-              child: Text('Войти'),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Переход на главный экран (без проверки логина)
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => MainScreen()),
-                );
-              },
-              child: Text('Перейти на главный экран'),
-            ),
+            _buildResultsButton(),
           ],
         ),
+      ),
+    );
+  }
+
+  // Логотип
+  Widget _buildLogo() {
+    return Column(
+      children: [
+        Icon(
+          Icons.account_circle,
+          size: 100,
+          color: Colors.white, // Белый цвет для логотипа
+        ),
+        Text(
+          'Добро пожаловать',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white, // Белый текст
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Пожалуйста, войдите в свою учетную запись',
+          style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+        ),
+      ],
+    );
+  }
+
+  // Стильное текстовое поле с иконкой
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required bool obscureText,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      style: TextStyle(color: Colors.white), // Белый текст в поле ввода
+      cursorColor: Colors.blueAccent, // Синий цвет курсора
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white), // Белая метка
+        prefixIcon: Icon(icon, color: Colors.white),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: Colors.grey[800], // Темно-серый фон для поля ввода
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: BorderSide(color: Colors.blueAccent, width: 2.0),
+        ),
+      ),
+    );
+  }
+
+  // Кнопка входа с более светлым цветом
+  Widget _buildLoginButton() {
+    return ElevatedButton(
+      onPressed: _login,
+      child: Text(
+        'Войти',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blueAccent, // Синий для кнопки
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25.0), // Более сглаженные углы
+        ),
+        elevation: 5.0,
+        minimumSize: Size(double.infinity, 50),
+        shadowColor: Colors.blueAccent.withOpacity(0.4),
+      ),
+    );
+  }
+
+  // Кнопка "Результаты"
+  Widget _buildResultsButton() {
+    return ElevatedButton(
+      onPressed: () {
+        // Переход на экран результатов
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreen()),
+        );
+      },
+      child: Text(
+        'Результаты',
+        style: TextStyle(fontSize: 16, color: Colors.white),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey[700], // Темная кнопка для результатов
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25.0),
+        ),
+        elevation: 4.0,
+        minimumSize: Size(double.infinity, 50),
       ),
     );
   }

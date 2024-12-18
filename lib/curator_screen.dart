@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_screen.dart'; // Импортируем экран авторизации
 
 /// ------------------- Экран "Куратор" -------------------
 class CuratorScreen extends StatefulWidget {
   @override
-  _ResultsTabState createState() => _ResultsTabState();
+  _CuratorScreenState createState() => _CuratorScreenState();
 }
 
-class _ResultsTabState extends State<CuratorScreen> {
+class _CuratorScreenState extends State<CuratorScreen> {
   late Future<List<dynamic>> results;
 
   Future<List<dynamic>> fetchResults() async {
@@ -45,8 +46,6 @@ class _ResultsTabState extends State<CuratorScreen> {
     });
   }
 
-
-
   Future<void> editResult(int id, Map<String, dynamic> result) async {
     await Supabase.instance.client.from('results').update(result).eq('id', id);
     setState(() {
@@ -62,26 +61,43 @@ class _ResultsTabState extends State<CuratorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildTab(
-      context,
-      results,
-          (item) =>
-      'Результат: ${item['score']} | Ученик: ${item['student']['name']} ${item['student']['surname']}',
-          (item) =>
-      'Дата: ${item['dateevent']} | Предмет: ${item['subject']} | Школа: ${item['numberschool']['number']}',
-          () => _showAddDialog(
-        context,
-        'Добавить результат',
-        {'score': '', 'dateevent': '', 'subject': ''},
-        addResult,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Кураторская панель'),
+        actions: [
+          // Кнопка для возврата на страницу авторизации
+          IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            },
+          ),
+        ],
       ),
-          (item) => _showEditDialog(
+      body: _buildTab(
         context,
-        'Редактировать результат',
-        item,
-        editResult,
+        results,
+            (item) =>
+        'Результат: ${item['score']} | Ученик: ${item['student']['name']} ${item['student']['surname']}',
+            (item) =>
+        'Дата: ${item['dateevent']} | Предмет: ${item['subject']} | Школа: ${item['numberschool']['number']}',
+            () => _showAddDialog(
+          context,
+          'Добавить результат',
+          {'score': '', 'dateevent': '', 'subject': ''},
+          addResult,
+        ),
+            (item) => _showEditDialog(
+          context,
+          'Редактировать результат',
+          item,
+          editResult,
+        ),
+        deleteResult,
       ),
-      deleteResult,
     );
   }
 
@@ -95,48 +111,42 @@ class _ResultsTabState extends State<CuratorScreen> {
       void Function(Map<String, dynamic>) onEdit,
       void Function(int) onDelete,
       ) {
-    return Scaffold(
-      body: FutureBuilder<List<dynamic>>(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final items = snapshot.data!;
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ListTile(
-                  title: Text(titleBuilder(item)),
-                  subtitle: Text(subtitleBuilder(item)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () => onEdit(item),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => onDelete(item['id']),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          } else {
-            return Center(child: Text('Нет данных.'));
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: onAdd,
-        child: Icon(Icons.add),
-      ),
+    return FutureBuilder<List<dynamic>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Ошибка: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          final items = snapshot.data!;
+          return ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return ListTile(
+                title: Text(titleBuilder(item)),
+                subtitle: Text(subtitleBuilder(item)),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () => onEdit(item),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () => onDelete(item['id']),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        } else {
+          return Center(child: Text('Нет данных.'));
+        }
+      },
     );
   }
 
