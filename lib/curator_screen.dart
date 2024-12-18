@@ -12,18 +12,22 @@ class _CuratorScreenState extends State<CuratorScreen> {
   late Future<List<dynamic>> results;
 
   Future<List<dynamic>> fetchResults() async {
-    final response = await Supabase.instance.client
-        .from('results')
-        .select('''
-        id, 
-        score, 
-        dateevent, 
-        subject, 
-        student:students(id, name, surname), 
-        numberschool:schools(id, number)
-      ''')
-        .then((value) => value as List<dynamic>);
-    return response;
+    try {
+      final response = await Supabase.instance.client
+          .from('results')
+          .select('''
+          id, 
+          score, 
+          dateevent, 
+          subject, 
+          student:students(id, name, surname), 
+          numberschool:schools(id, number)
+        ''')
+          .then((value) => value as List<dynamic>);
+      return response;
+    } catch (e) {
+      throw Exception('Ошибка при загрузке данных: $e');
+    }
   }
 
   Future<void> deleteResult(int id) async {
@@ -47,6 +51,7 @@ class _CuratorScreenState extends State<CuratorScreen> {
   }
 
   Future<void> editResult(int id, Map<String, dynamic> result) async {
+    print("Редактируем результат с ID $id: $result");
     await Supabase.instance.client.from('results').update(result).eq('id', id);
     setState(() {
       results = fetchResults();
@@ -62,12 +67,17 @@ class _CuratorScreenState extends State<CuratorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black, // Темный фон
       appBar: AppBar(
-        title: Text('Кураторская панель'),
+        backgroundColor: Colors.grey[850], // Темный цвет для AppBar
+        title: Text(
+          'Кураторская панель',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         actions: [
           // Кнопка для возврата на страницу авторизации
           IconButton(
-            icon: Icon(Icons.exit_to_app),
+            icon: Icon(Icons.exit_to_app, color: Colors.white),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -77,26 +87,35 @@ class _CuratorScreenState extends State<CuratorScreen> {
           ),
         ],
       ),
-      body: _buildTab(
-        context,
-        results,
-            (item) =>
-        'Результат: ${item['score']} | Ученик: ${item['student']['name']} ${item['student']['surname']}',
-            (item) =>
-        'Дата: ${item['dateevent']} | Предмет: ${item['subject']} | Школа: ${item['numberschool']['number']}',
-            () => _showAddDialog(
-          context,
-          'Добавить результат',
-          {'score': '', 'dateevent': '', 'subject': ''},
-          addResult,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildTab(
+                context,
+                results,
+                    (item) =>
+                'Результат: ${item['score']} | Ученик: ${item['student']['name']} ${item['student']['surname']}',
+                    (item) =>
+                'Дата: ${item['dateevent']} | Предмет: ${item['subject']} | Школа: ${item['numberschool']['number']}',
+                deleteResult,
+              ),
+            ),
+          ],
         ),
-            (item) => _showEditDialog(
-          context,
-          'Редактировать результат',
-          item,
-          editResult,
-        ),
-        deleteResult,
+      ),
+      // Кнопка "Добавить результат" снизу справа
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddDialog(context, 'Добавить результат', {
+            'score': '',
+            'dateevent': '',
+            'subject': '',
+          }, addResult);
+        },
+        backgroundColor: Colors.blue, // Цвет кнопки
+        child: Icon(Icons.add, color: Colors.white), // Иконка "+"
       ),
     );
   }
@@ -107,44 +126,62 @@ class _CuratorScreenState extends State<CuratorScreen> {
       Future<List<dynamic>> future,
       String Function(Map<String, dynamic>) titleBuilder,
       String Function(Map<String, dynamic>) subtitleBuilder,
-      VoidCallback onAdd,
-      void Function(Map<String, dynamic>) onEdit,
       void Function(int) onDelete,
       ) {
     return FutureBuilder<List<dynamic>>(
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.blue))); // Цвет колесика
         } else if (snapshot.hasError) {
-          return Center(child: Text('Ошибка: ${snapshot.error}'));
+          return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
         } else if (snapshot.hasData) {
           final items = snapshot.data!;
           return ListView.builder(
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return ListTile(
-                title: Text(titleBuilder(item)),
-                subtitle: Text(subtitleBuilder(item)),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () => onEdit(item),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => onDelete(item['id']),
-                    ),
-                  ],
+              return Card(
+                color: Colors.grey[850], // Темный цвет карточек
+                elevation: 4,
+                margin: EdgeInsets.symmetric(vertical: 8),
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  title: Text(
+                    titleBuilder(item),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    subtitleBuilder(item),
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          print('Нажата кнопка редактирования для ID: ${item['id']}');
+                          _showEditDialog(
+                            context,
+                            'Редактировать результат',
+                            item,
+                            editResult,
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => onDelete(item['id']),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           );
         } else {
-          return Center(child: Text('Нет данных.'));
+          return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
         }
       },
     );
@@ -167,28 +204,32 @@ class _CuratorScreenState extends State<CuratorScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(title),
+              backgroundColor: Colors.grey[850], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controllers['score'],
-                      decoration: InputDecoration(labelText: 'Оценка'),
+                      decoration: InputDecoration(labelText: 'Оценка', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['dateevent'],
-                      decoration: InputDecoration(labelText: 'Дата'),
+                      decoration: InputDecoration(labelText: 'Дата', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['subject'],
-                      decoration: InputDecoration(labelText: 'Предмет'),
+                      decoration: InputDecoration(labelText: 'Предмет', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         'Выберите ученика',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                     FutureBuilder<List<dynamic>>(
@@ -198,16 +239,22 @@ class _CuratorScreenState extends State<CuratorScreen> {
                           .then((value) => value as List<dynamic>),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
+                          return Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          );
                         }
                         return DropdownButton<int>(
                           isExpanded: true,
                           value: selectedStudent,
-                          hint: Text('Выберите ученика'),
+                          hint: Text('Выберите ученика', style: TextStyle(color: Colors.white)),
+                          dropdownColor: Colors.grey[850],
+                          style: TextStyle(color: Colors.white),
                           items: snapshot.data!.map((student) {
                             return DropdownMenuItem<int>(
                               value: student['id'],
-                              child: Text('${student['name']} ${student['surname']}'),
+                              child: Text('${student['name']} ${student['surname']}', style: TextStyle(color: Colors.white)),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -218,13 +265,6 @@ class _CuratorScreenState extends State<CuratorScreen> {
                         );
                       },
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Выберите школу',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
                     FutureBuilder<List<dynamic>>(
                       future: Supabase.instance.client
                           .from('schools')
@@ -232,16 +272,22 @@ class _CuratorScreenState extends State<CuratorScreen> {
                           .then((value) => value as List<dynamic>),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
+                          return Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          );
                         }
                         return DropdownButton<int>(
                           isExpanded: true,
                           value: selectedSchool,
-                          hint: Text('Выберите школу'),
+                          hint: Text('Выберите школу', style: TextStyle(color: Colors.white)),
+                          dropdownColor: Colors.grey[850],
+                          style: TextStyle(color: Colors.white),
                           items: snapshot.data!.map((school) {
                             return DropdownMenuItem<int>(
                               value: school['id'],
-                              child: Text('Школа №${school['number']}'),
+                              child: Text('№${school['number']}', style: TextStyle(color: Colors.white)),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -257,22 +303,23 @@ class _CuratorScreenState extends State<CuratorScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
-                    final data = {
-                      'score': controllers['score']!.text,
-                      'dateevent': controllers['dateevent']!.text,
-                      'subject': controllers['subject']!.text,
+                    onSave({
+                      'score': controllers['score']?.text,
+                      'dateevent': controllers['dateevent']?.text,
+                      'subject': controllers['subject']?.text,
                       'studentid': selectedStudent,
                       'numberschool': selectedSchool,
-                    };
-                    onSave(data); // Передаем данные в функцию onSave (addResult)
+                    });
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить'),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -286,16 +333,16 @@ class _CuratorScreenState extends State<CuratorScreen> {
   void _showEditDialog(
       BuildContext context,
       String title,
-      Map<String, dynamic> item,
+      Map<String, dynamic> result,
       Function(int, Map<String, dynamic>) onSave,
       ) {
     final controllers = {
-      'score': TextEditingController(text: item['score'].toString()),
-      'dateevent': TextEditingController(text: item['dateevent']),
-      'subject': TextEditingController(text: item['subject']),
+      'score': TextEditingController(text: result['score'].toString()),
+      'dateevent': TextEditingController(text: result['dateevent'].toString()),
+      'subject': TextEditingController(text: result['subject'].toString()),
     };
-    int? selectedStudent = item['student']['id'];
-    int? selectedSchool = item['numberschool']['id'];
+    int? selectedStudent = result['studentid'];
+    int? selectedSchool = result['numberschool'];
 
     showDialog(
       context: context,
@@ -303,28 +350,32 @@ class _CuratorScreenState extends State<CuratorScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(title),
+              backgroundColor: Colors.grey[850], // Темный фон диалога
+              title: Text(title, style: TextStyle(color: Colors.white)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controllers['score'],
-                      decoration: InputDecoration(labelText: 'Оценка'),
+                      decoration: InputDecoration(labelText: 'Оценка', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['dateevent'],
-                      decoration: InputDecoration(labelText: 'Дата'),
+                      decoration: InputDecoration(labelText: 'Дата', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     TextField(
                       controller: controllers['subject'],
-                      decoration: InputDecoration(labelText: 'Предмет'),
+                      decoration: InputDecoration(labelText: 'Предмет', labelStyle: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         'Выберите ученика',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                     FutureBuilder<List<dynamic>>(
@@ -334,15 +385,22 @@ class _CuratorScreenState extends State<CuratorScreen> {
                           .then((value) => value as List<dynamic>),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
+                          return Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          );
                         }
                         return DropdownButton<int>(
                           isExpanded: true,
                           value: selectedStudent,
+                          hint: Text('Выберите ученика', style: TextStyle(color: Colors.white)),
+                          dropdownColor: Colors.grey[850],
+                          style: TextStyle(color: Colors.white),
                           items: snapshot.data!.map((student) {
                             return DropdownMenuItem<int>(
                               value: student['id'],
-                              child: Text('${student['name']} ${student['surname']}'),
+                              child: Text('${student['name']} ${student['surname']}', style: TextStyle(color: Colors.white)),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -353,13 +411,6 @@ class _CuratorScreenState extends State<CuratorScreen> {
                         );
                       },
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Выберите школу',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
                     FutureBuilder<List<dynamic>>(
                       future: Supabase.instance.client
                           .from('schools')
@@ -367,15 +418,22 @@ class _CuratorScreenState extends State<CuratorScreen> {
                           .then((value) => value as List<dynamic>),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
-                          return CircularProgressIndicator();
+                          return Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          );
                         }
                         return DropdownButton<int>(
                           isExpanded: true,
                           value: selectedSchool,
+                          hint: Text('Выберите школу', style: TextStyle(color: Colors.white)),
+                          dropdownColor: Colors.grey[850],
+                          style: TextStyle(color: Colors.white),
                           items: snapshot.data!.map((school) {
                             return DropdownMenuItem<int>(
                               value: school['id'],
-                              child: Text('Школа №${school['number']}'),
+                              child: Text('№${school['number']}', style: TextStyle(color: Colors.white)),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -391,22 +449,23 @@ class _CuratorScreenState extends State<CuratorScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
-                    final data = {
-                      'score': controllers['score']!.text,
-                      'dateevent': controllers['dateevent']!.text,
-                      'subject': controllers['subject']!.text,
+                    onSave(result['id'], {
+                      'score': controllers['score']?.text,
+                      'dateevent': controllers['dateevent']?.text,
+                      'subject': controllers['subject']?.text,
                       'studentid': selectedStudent,
                       'numberschool': selectedSchool,
-                    };
-                    onSave(item['id'], data); // Передаем данные в функцию onSave (editResult)
+                    });
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить'),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );

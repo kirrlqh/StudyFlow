@@ -15,12 +15,27 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Авторизация',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blue, // Основной цвет приложения
+        brightness: Brightness.light, // Светлая тема
+        inputDecorationTheme: InputDecorationTheme(
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.blue), // Цвет границы при фокусе
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey), // Цвет границы по умолчанию
+          ),
+          labelStyle: TextStyle(color: Colors.grey), // Цвет метки
+        ),
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Colors.blue, // Цвет курсора
+          selectionColor: Colors.blue.withOpacity(0.5), // Цвет выделения текста
+          selectionHandleColor: Colors.blue, // Цвет маркеров выделения
+        ),
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginScreen(),  // Экран авторизации
-        '/main': (context) => MainScreen(),  // Основной экран
+        '/': (context) => LoginScreen(), // Экран авторизации
+        '/main': (context) => MainScreen(), // Основной экран
       },
     );
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_screen.dart';
-
+Color myCustomColor = Color(0xFF42A5F5); // Яркий голубой
 class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -113,7 +113,11 @@ class _StudentsTabState extends State<StudentsTab> {
         future: students,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // Синий цвет загрузочного индикатора
+              ),
+            );
           } else if (snapshot.hasError) {
             return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
           } else if (snapshot.hasData) {
@@ -138,13 +142,13 @@ class _StudentsTabState extends State<StudentsTab> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue), // Голубая иконка редактирования
+                          icon: Icon(Icons.edit, color: Colors.blue), // Синие кнопки редактирования
                           onPressed: () {
                             _showEditDialog(context, 'Редактировать ученика', student, editStudent);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
+                          icon: Icon(Icons.delete, color: Colors.red), // Красная кнопка удаления
                           onPressed: () => deleteStudent(student['id']),
                         ),
                       ],
@@ -168,8 +172,8 @@ class _StudentsTabState extends State<StudentsTab> {
           {'name': '', 'surname': '', 'class': '', 'numberschool': ''},
           addStudent,
         ),
-        backgroundColor: Colors.blueAccent, // Яркий цвет для кнопки добавления
-        child: Icon(Icons.add),
+        backgroundColor: Colors.blueAccent, // Яркая кнопка добавления
+        child: Icon(Icons.add, color: Colors.white), // Белый плюсик
       ),
     );
   }
@@ -206,17 +210,26 @@ class _StudentsTabState extends State<StudentsTab> {
                         children: [
                           TextField(
                             controller: controllers['name'],
-                            decoration: InputDecoration(labelText: 'Имя', labelStyle: TextStyle(color: Colors.white)),
+                            decoration: InputDecoration(
+                              labelText: 'Имя',
+                              labelStyle: TextStyle(color: Colors.white),
+                            ),
                             style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['surname'],
-                            decoration: InputDecoration(labelText: 'Фамилия', labelStyle: TextStyle(color: Colors.white)),
+                            decoration: InputDecoration(
+                              labelText: 'Фамилия',
+                              labelStyle: TextStyle(color: Colors.white),
+                            ),
                             style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['class'],
-                            decoration: InputDecoration(labelText: 'Класс', labelStyle: TextStyle(color: Colors.white)),
+                            decoration: InputDecoration(
+                              labelText: 'Класс',
+                              labelStyle: TextStyle(color: Colors.white),
+                            ),
                             style: TextStyle(color: Colors.white),
                           ),
                           DropdownButton<int>(
@@ -302,10 +315,10 @@ class _StudentsTabState extends State<StudentsTab> {
               backgroundColor: Colors.grey[850], // Темный фон диалога
               title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
               content: FutureBuilder<List<dynamic>>(
-                future: schools,
+                future: schools, // Данные о школах
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
+                    return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
                   } else if (snapshot.hasData) {
@@ -316,19 +329,59 @@ class _StudentsTabState extends State<StudentsTab> {
                         children: [
                           TextField(
                             controller: controllers['name'],
-                            decoration: InputDecoration(labelText: 'Имя', labelStyle: TextStyle(color: Colors.white)),
-                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: 'Имя',
+                              labelStyle: TextStyle(color: Colors.white), // Белая метка
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white70), // Белая подсветка по умолчанию
+                              ),
+                              errorBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red), // Красная подсветка при ошибке
+                              ),
+                            ),
+                            style: TextStyle(color: Colors.white), // Белый текст
+                            cursorColor: Colors.blue, // Синий цвет для курсора
                           ),
                           TextField(
                             controller: controllers['surname'],
-                            decoration: InputDecoration(labelText: 'Фамилия', labelStyle: TextStyle(color: Colors.white)),
-                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: 'Фамилия',
+                              labelStyle: TextStyle(color: Colors.white), // Белая метка
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white70), // Белая подсветка по умолчанию
+                              ),
+                              errorBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red), // Красная подсветка при ошибке
+                              ),
+                            ),
+                            style: TextStyle(color: Colors.white), // Белый текст
+                            cursorColor: Colors.blue, // Синий цвет для курсора
                           ),
                           TextField(
                             controller: controllers['class'],
-                            decoration: InputDecoration(labelText: 'Класс', labelStyle: TextStyle(color: Colors.white)),
-                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: 'Класс',
+                              labelStyle: TextStyle(color: Colors.white), // Белая метка
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white70), // Белая подсветка по умолчанию
+                              ),
+                              errorBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red), // Красная подсветка при ошибке
+                              ),
+                            ),
+                            style: TextStyle(color: Colors.white), // Белый текст
+                            cursorColor: Colors.blue, // Синий цвет для курсора
                           ),
+                          // Выпадающий список для выбора школы
                           DropdownButton<int>(
                             isExpanded: true,
                             value: selectedSchool,
@@ -387,8 +440,11 @@ class _StudentsTabState extends State<StudentsTab> {
         );
       },
     );
+
+
   }
 }
+
 
 /// ------------------- Вкладка "Результаты" -------------------
 class ResultsTab extends StatefulWidget {
@@ -398,6 +454,8 @@ class ResultsTab extends StatefulWidget {
 
 class _ResultsTabState extends State<ResultsTab> {
   late Future<List<dynamic>> results;
+  late Future<List<dynamic>> students;
+  late Future<List<dynamic>> schools;
 
   Future<List<dynamic>> fetchResults() async {
     final response = await Supabase.instance.client
@@ -410,6 +468,22 @@ class _ResultsTabState extends State<ResultsTab> {
         student:students(id, name, surname), 
         numberschool:schools(id, number)
       ''')
+        .then((value) => value as List<dynamic>);
+    return response;
+  }
+
+  Future<List<dynamic>> fetchStudents() async {
+    final response = await Supabase.instance.client
+        .from('students')
+        .select('id, name, surname')
+        .then((value) => value as List<dynamic>);
+    return response;
+  }
+
+  Future<List<dynamic>> fetchSchools() async {
+    final response = await Supabase.instance.client
+        .from('schools')
+        .select('id, number')
         .then((value) => value as List<dynamic>);
     return response;
   }
@@ -445,21 +519,27 @@ class _ResultsTabState extends State<ResultsTab> {
   void initState() {
     super.initState();
     results = fetchResults();
+    students = fetchStudents();
+    schools = fetchSchools();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Темный фон страницы
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Результаты', style: TextStyle(color: Colors.white)), // Белый текст на AppBar
-        backgroundColor: Colors.grey[900], // Темный AppBar
+        title: Text('Результаты', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: results,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            );
           } else if (snapshot.hasError) {
             return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
           } else if (snapshot.hasData) {
@@ -469,28 +549,28 @@ class _ResultsTabState extends State<ResultsTab> {
               itemBuilder: (context, index) {
                 final result = resultList[index];
                 return Card(
-                  color: Colors.grey[850], // Темный фон карточки
+                  color: Colors.grey[850],
                   margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                   child: ListTile(
                     title: Text(
                       'Результат: ${result['score']} | Ученик: ${result['student']['name']} ${result['student']['surname']}',
-                      style: TextStyle(color: Colors.white), // Белый текст
+                      style: TextStyle(color: Colors.white),
                     ),
                     subtitle: Text(
                       'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа: ${result['numberschool']['number']}',
-                      style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                      style: TextStyle(color: Colors.white70),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue), // Кнопка редактирования
+                          icon: Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
                             _showEditDialog(context, 'Редактировать результат', result, editResult);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
+                          icon: Icon(Icons.delete, color: Colors.red),
                           onPressed: () => deleteResult(result['id']),
                         ),
                       ],
@@ -511,11 +591,11 @@ class _ResultsTabState extends State<ResultsTab> {
         onPressed: () => _showAddDialog(
           context,
           'Добавить результат',
-          {'score': '', 'dateevent': '', 'subject': ''},
+          {'score': '', 'dateevent': '', 'subject': '', 'studentid': '', 'numberschool': ''},
           addResult,
         ),
-        backgroundColor: Colors.blueAccent, // Яркая кнопка добавления
-        child: Icon(Icons.add),
+        backgroundColor: Colors.blueAccent,
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -534,26 +614,113 @@ class _ResultsTabState extends State<ResultsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: Colors.grey[850], // Темный фон диалога
-              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
+              backgroundColor: Colors.grey[850],
+              title: Text(title, style: TextStyle(color: Colors.white)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controllers['score'],
-                      decoration: InputDecoration(labelText: 'Результат', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Результат',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue,
                     ),
                     TextField(
                       controller: controllers['dateevent'],
-                      decoration: InputDecoration(labelText: 'Дата события', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Дата события',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue,
                     ),
                     TextField(
                       controller: controllers['subject'],
-                      decoration: InputDecoration(labelText: 'Предмет', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Предмет',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue,
+                    ),
+                    FutureBuilder<List<dynamic>>(
+                      future: students,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text('Ошибка: ${snapshot.error}'));
+                        } else if (snapshot.hasData) {
+                          final studentList = snapshot.data!;
+                          return DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Выберите ученика',
+                              labelStyle: TextStyle(color: Colors.white),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                              ),
+                            ),
+                            dropdownColor: Colors.grey[850],
+                            items: studentList.map((student) {
+                              return DropdownMenuItem<String>(
+                                value: student['id'].toString(),
+                                child: Text('${student['name']} ${student['surname']}', style: TextStyle(color: Colors.white)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              controllers['studentid']?.text = value!;
+                            },
+                          );
+                        } else {
+                          return Center(child: Text('Нет данных.'));
+                        }
+                      },
+                    ),
+                    FutureBuilder<List<dynamic>>(
+                      future: schools,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text('Ошибка: ${snapshot.error}'));
+                        } else if (snapshot.hasData) {
+                          final schoolList = snapshot.data!;
+                          return DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Выберите школу',
+                              labelStyle: TextStyle(color: Colors.white),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                              ),
+                            ),
+                            dropdownColor: Colors.grey[850],
+                            items: schoolList.map((school) {
+                              return DropdownMenuItem<String>(
+                                value: school['id'].toString(),
+                                child: Text('Школа №${school['number']}', style: TextStyle(color: Colors.white)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              controllers['numberschool']?.text = value!;
+                            },
+                          );
+                        } else {
+                          return Center(child: Text('Нет данных.'));
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -593,6 +760,8 @@ class _ResultsTabState extends State<ResultsTab> {
       'score': TextEditingController(text: item['score'].toString()),
       'dateevent': TextEditingController(text: item['dateevent']),
       'subject': TextEditingController(text: item['subject']),
+      'studentid': TextEditingController(text: item['student']?['id']?.toString() ?? ''),
+      'numberschool': TextEditingController(text: item['numberschool']?['id']?.toString() ?? ''),
     };
 
     showDialog(
@@ -601,26 +770,113 @@ class _ResultsTabState extends State<ResultsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: Colors.grey[850], // Темный фон диалога
-              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
+              backgroundColor: Colors.grey[850],
+              title: Text(title, style: TextStyle(color: Colors.white)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controllers['score'],
-                      decoration: InputDecoration(labelText: 'Результат', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Результат',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue,
                     ),
                     TextField(
                       controller: controllers['dateevent'],
-                      decoration: InputDecoration(labelText: 'Дата события', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Дата события',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue,
                     ),
                     TextField(
                       controller: controllers['subject'],
-                      decoration: InputDecoration(labelText: 'Предмет', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Предмет',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue,
+                    ),
+                    FutureBuilder<List<dynamic>>(
+                      future: students,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text('Ошибка: ${snapshot.error}'));
+                        } else if (snapshot.hasData) {
+                          final studentList = snapshot.data!;
+                          return DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Выберите ученика',
+                              labelStyle: TextStyle(color: Colors.white),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                              ),
+                            ),
+                            dropdownColor: Colors.grey[850],
+                            items: studentList.map((student) {
+                              return DropdownMenuItem<String>(
+                                value: student['id'].toString(),
+                                child: Text('${student['name']} ${student['surname']}', style: TextStyle(color: Colors.white)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              controllers['studentid']?.text = value!;
+                            },
+                          );
+                        } else {
+                          return Center(child: Text('Нет данных.'));
+                        }
+                      },
+                    ),
+                    FutureBuilder<List<dynamic>>(
+                      future: schools,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text('Ошибка: ${snapshot.error}'));
+                        } else if (snapshot.hasData) {
+                          final schoolList = snapshot.data!;
+                          return DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Выберите школу',
+                              labelStyle: TextStyle(color: Colors.white),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                              ),
+                            ),
+                            dropdownColor: Colors.grey[850],
+                            items: schoolList.map((school) {
+                              return DropdownMenuItem<String>(
+                                value: school['id'].toString(),
+                                child: Text('Школа №${school['number']}', style: TextStyle(color: Colors.white)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              controllers['numberschool']?.text = value!;
+                            },
+                          );
+                        } else {
+                          return Center(child: Text('Нет данных.'));
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -701,14 +957,19 @@ class _SchoolsTabState extends State<SchoolsTab> {
     return Scaffold(
       backgroundColor: Colors.black, // Темный фон страницы
       appBar: AppBar(
-        title: Text('Школы', style: TextStyle(color: Colors.white)), // Белый текст на AppBar
-        backgroundColor: Colors.grey[900],
+        title: Text('Школы', style: TextStyle(color: Colors.white)), // Белый текст
+        backgroundColor: Colors.grey[900], // Черный AppBar
+        iconTheme: IconThemeData(color: Colors.white), // Белые иконки
       ),
       body: FutureBuilder<List<dynamic>>(
         future: schools,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // Синий цвет загрузочного индикатора
+              ),
+            );
           } else if (snapshot.hasError) {
             return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
           } else if (snapshot.hasData) {
@@ -748,7 +1009,6 @@ class _SchoolsTabState extends State<SchoolsTab> {
                       _showEditDialog(context, 'Редактировать школу', school, editSchool);
                     },
                   ),
-
                 );
               },
             );
@@ -764,8 +1024,8 @@ class _SchoolsTabState extends State<SchoolsTab> {
           {'number': '', 'address': ''},
           addSchool,
         ),
-        backgroundColor: Colors.blueAccent,
-        child: Icon(Icons.add),
+        backgroundColor: Colors.blueAccent, // Синий цвет кнопки
+        child: Icon(Icons.add, color: Colors.white), // Белый плюсик
       ),
     );
   }
@@ -792,13 +1052,27 @@ class _SchoolsTabState extends State<SchoolsTab> {
                   children: [
                     TextField(
                       controller: controllers['number'],
-                      decoration: InputDecoration(labelText: 'Номер школы', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Номер школы',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue, // Синий цвет для курсора
                     ),
                     TextField(
                       controller: controllers['address'],
-                      decoration: InputDecoration(labelText: 'Адрес школы', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Адрес школы',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue, // Синий цвет для курсора
                     ),
                   ],
                 ),
@@ -853,13 +1127,27 @@ class _SchoolsTabState extends State<SchoolsTab> {
                   children: [
                     TextField(
                       controller: controllers['number'],
-                      decoration: InputDecoration(labelText: 'Номер школы', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Номер школы',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue, // Синий цвет для курсора
                     ),
                     TextField(
                       controller: controllers['address'],
-                      decoration: InputDecoration(labelText: 'Адрес школы', labelStyle: TextStyle(color: Colors.white)),
+                      decoration: InputDecoration(
+                        labelText: 'Адрес школы',
+                        labelStyle: TextStyle(color: Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
+                        ),
+                      ),
                       style: TextStyle(color: Colors.white),
+                      cursorColor: Colors.blue, // Синий цвет для курсора
                     ),
                   ],
                 ),
