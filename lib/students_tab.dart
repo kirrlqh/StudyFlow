@@ -26,9 +26,24 @@ class StudentsTab extends StatelessWidget {
             itemCount: students.length,
             itemBuilder: (context, index) {
               final student = students[index];
-              return ListTile(
-                title: Text('${student['name']} ${student['surname']}'),
-                subtitle: Text('Класс: ${student['class']}, Школа №${student['numberschool']}'),
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    child: Text(student['name'][0]),
+                  ),
+                  title: Text(
+                    '${student['name']} ${student['surname']}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text('Класс: ${student['class']}, Школа №${student['numberschool']}'),
+                ),
               );
             },
           );

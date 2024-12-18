@@ -26,9 +26,21 @@ class SchoolsTab extends StatelessWidget {
             itemCount: schools.length,
             itemBuilder: (context, index) {
               final school = schools[index];
-              return ListTile(
-                title: Text('Школа №${school['number']}'),
-                subtitle: Text('Адрес: ${school['address']}'),
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  leading: Icon(Icons.apartment, color: Colors.blue),
+                  title: Text(
+                    'Школа №${school['number']}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text('Адрес: ${school['address']}'),
+                ),
               );
             },
           );

@@ -8,26 +8,24 @@ class ResultsTab extends StatefulWidget {
 
 class _ResultsTabState extends State<ResultsTab> {
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> results = []; // Данные таблицы результатов
-  List<Map<String, dynamic>> filteredResults = []; // Отфильтрованные результаты
-  bool isLoading = true; // Состояние загрузки данных
+  List<Map<String, dynamic>> results = [];
+  List<Map<String, dynamic>> filteredResults = [];
+  bool isLoading = true;
 
-  // Функция для получения имени и фамилии студентов
   Future<String> fetchStudentName(int studentId) async {
     final response = await Supabase.instance.client
         .from('students')
-        .select('name, surname') // Извлекаем имя и фамилию
+        .select('name, surname')
         .eq('id', studentId)
         .single();
 
     if (response != null && response['name'] != null && response['surname'] != null) {
-      return '${response['surname']} ${response['name']}'; // Возвращаем фамилию и имя
+      return '${response['surname']} ${response['name']}';
     } else {
-      return 'Неизвестно'; // Если имя или фамилия не найдены
+      return 'Неизвестно';
     }
   }
 
-  // Функция для получения данных из таблицы results
   Future<void> fetchResults() async {
     try {
       final response = await Supabase.instance.client
@@ -41,7 +39,7 @@ class _ResultsTabState extends State<ResultsTab> {
           final studentName = await fetchStudentName(result['studentid']);
           fetchedResults.add({
             'id': result['id'],
-            'student': studentName, // Добавляем фамилию и имя студента
+            'student': studentName,
             'score': result['score'],
             'numberschool': result['numberschool'],
             'dateevent': result['dateevent'],
@@ -51,8 +49,8 @@ class _ResultsTabState extends State<ResultsTab> {
 
         setState(() {
           results = fetchedResults;
-          filteredResults = fetchedResults; // Изначально показываем все результаты
-          isLoading = false; // Загрузка завершена
+          filteredResults = fetchedResults;
+          isLoading = false;
         });
       } else {
         throw Exception('Ошибка загрузки результатов.');
@@ -60,12 +58,11 @@ class _ResultsTabState extends State<ResultsTab> {
     } catch (e) {
       print('Ошибка загрузки данных: $e');
       setState(() {
-        isLoading = false; // Завершаем загрузку даже в случае ошибки
+        isLoading = false;
       });
     }
   }
 
-  // Функция фильтрации по фамилии студента
   void _filterResults(String query) {
     final filtered = results.where((result) {
       final studentName = result['student']?.toLowerCase() ?? '';
@@ -80,57 +77,79 @@ class _ResultsTabState extends State<ResultsTab> {
   @override
   void initState() {
     super.initState();
-    fetchResults(); // Загружаем результаты при инициализации
+    fetchResults();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: 'Поиск по фамилии или имени студента',
-                    border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Результаты студентов'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _filterResults,
+                    decoration: InputDecoration(
+                      hintText: 'Поиск по фамилии или имени...',
+                      labelText: 'Поиск',
+                      prefixIcon: Icon(Icons.search, color: Colors.deepPurple),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {
-                  _filterResults(_searchController.text); // Запуск фильтрации по кнопке
-                },
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Expanded(
-          child: isLoading
-              ? Center(child: CircularProgressIndicator()) // Показать индикатор загрузки
-              : (filteredResults.isEmpty
-              ? Center(child: Text('Нет данных.'))
-              : ListView.builder(
-            itemCount: filteredResults.length,
-            itemBuilder: (context, index) {
-              final result = filteredResults[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: ListTile(
-                  title: Text(result['student'] ?? 'Неизвестно'),
-                  subtitle: Text(
-                    'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : (filteredResults.isEmpty
+                ? Center(child: Text('Нет данных.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)))
+                : ListView.builder(
+              itemCount: filteredResults.length,
+              itemBuilder: (context, index) {
+                final result = filteredResults[index];
+                return Card(
+                  elevation: 5,
+                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0),
                   ),
-                ),
-              );
-            },
-          )),
-        ),
-      ],
+                  child: ListTile(
+                    contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    title: Text(
+                      result['student'] ?? 'Неизвестно',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    subtitle: Text(
+                      'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    ),
+                    tileColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    leading: Icon(Icons.school, color: Colors.deepPurple),
+                  ),
+                );
+              },
+            )),
+          ),
+        ],
+      ),
     );
   }
 }
