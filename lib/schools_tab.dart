@@ -23,6 +23,11 @@ class _SchoolsTabState extends State<SchoolsTab> {
       builder: (context, snapshot) {
         // Пока данные загружаются, устанавливаем темный фон
         return Scaffold(
+          appBar: AppBar(
+            title: Text('Школы', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.black,
+            elevation: 0,
+          ),
           backgroundColor: Colors.black,  // Темный фон для всего экрана
           body: Container(
             color: Colors.black,  // Темный фон для всей страницы

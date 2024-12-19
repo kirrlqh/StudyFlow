@@ -89,78 +89,99 @@ class _CuratorScreenState extends State<CuratorScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            // Переходим на экран авторизации
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => LoginScreen()), // Переход на экран авторизации
+              MaterialPageRoute(builder: (context) => LoginScreen()),
             );
           },
         ),
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: results,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
-          } else if (snapshot.hasData) {
-            final resultList = snapshot.data!;
-            return ListView.builder(
-              itemCount: resultList.length,
-              itemBuilder: (context, index) {
-                final result = resultList[index];
-                return Card(
-                  color: Colors.grey[850],
-                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: ListTile(
-                    title: Text(
-                      'Результат: ${result['score']} | Ученик: ${result['student']['name']} ${result['student']['surname']}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    subtitle: Text(
-                      'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа №${result['numberschool']['number']}',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            _showEditDialog(context, 'Редактировать результат', result, editResult);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => deleteResult(result['id']),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      _showEditDialog(context, 'Редактировать результат', result, editResult);
-                    },
+      body: Stack(
+        children: [
+          FutureBuilder<List<dynamic>>(
+            future: results,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(
-          context,
-          'Добавить результат',
-          {'score': '', 'dateevent': '', 'subject': '', 'studentid': '', 'numberschool': ''},
-          addResult,
-        ),
-        backgroundColor: Colors.blueAccent,
-        child: Icon(Icons.add, color: Colors.white),
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text('Ошибка: ${snapshot.error}',
+                      style: TextStyle(color: Colors.white)),
+                );
+              } else if (snapshot.hasData) {
+                final resultList = snapshot.data!;
+                return ListView.builder(
+                  padding: EdgeInsets.only(bottom: 80),
+                  itemCount: resultList.length,
+                  itemBuilder: (context, index) {
+                    final result = resultList[index];
+                    return Card(
+                      color: Colors.grey[850],
+                      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      child: ListTile(
+                        title: Text(
+                          'Результат: ${result['score']} | Ученик: ${result['student']['name']} ${result['student']['surname']}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа №${result['numberschool']['number']}',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                _showEditDialog(context, 'Редактировать результат', result, editResult);
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => deleteResult(result['id']),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          _showEditDialog(context, 'Редактировать результат', result, editResult);
+                        },
+                      ),
+                    );
+                  },
+                );
+              } else {
+                return Center(
+                  child: Text('Нет данных.', style: TextStyle(color: Colors.white)),
+                );
+              }
+            },
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: () => _showAddDialog(
+                context,
+                'Добавить результат',
+                {
+                  'score': '',
+                  'dateevent': '',
+                  'subject': '',
+                  'studentid': '',
+                  'numberschool': ''
+                },
+                addResult,
+              ),
+              backgroundColor: Colors.blueAccent,
+              child: Icon(Icons.add, color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -196,7 +217,6 @@ class _CuratorScreenState extends State<CuratorScreen> {
                       ),
                       style: TextStyle(color: Colors.white),
                       cursorColor: Colors.blue,
-                      keyboardType: TextInputType.number, // Для числового ввода
                     ),
                     TextField(
                       controller: controllers['dateevent'],
@@ -294,23 +314,23 @@ class _CuratorScreenState extends State<CuratorScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
+                ),
+                TextButton(
+                  onPressed: () {
                     final result = {
-                      'score': controllers['score']!.text,
-                      'dateevent': controllers['dateevent']!.text,
-                      'subject': controllers['subject']!.text,
-                      'studentid': controllers['studentid']!.text,
-                      'numberschool': controllers['numberschool']!.text,
+                      'score': controllers['score']?.text ?? '',
+                      'dateevent': controllers['dateevent']?.text ?? '',
+                      'subject': controllers['subject']?.text ?? '',
+                      'studentid': controllers['studentid']?.text ?? '',
+                      'numberschool': controllers['numberschool']?.text ?? '',
                     };
                     onSave(result);
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('Отмена', style: TextStyle(color: Colors.red)),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -320,18 +340,13 @@ class _CuratorScreenState extends State<CuratorScreen> {
     );
   }
 
-  void _showEditDialog(
-      BuildContext context,
-      String title,
-      Map<String, dynamic> result,
-      Function(int, Map<String, dynamic>) onSave,
-      ) {
+  void _showEditDialog(BuildContext context, String title, dynamic result, Function(int, Map<String, dynamic>) onEdit) {
     final controllers = {
       'score': TextEditingController(text: result['score'].toString()),
       'dateevent': TextEditingController(text: result['dateevent']),
       'subject': TextEditingController(text: result['subject']),
-      'studentid': TextEditingController(text: result['studentid'].toString()),
-      'numberschool': TextEditingController(text: result['numberschool'].toString()),
+      'studentid': TextEditingController(text: result['student']['id'].toString()),
+      'numberschool': TextEditingController(text: result['numberschool']['id'].toString()),
     };
 
     showDialog(
@@ -357,7 +372,6 @@ class _CuratorScreenState extends State<CuratorScreen> {
                       ),
                       style: TextStyle(color: Colors.white),
                       cursorColor: Colors.blue,
-                      keyboardType: TextInputType.number, // Для числового ввода
                     ),
                     TextField(
                       controller: controllers['dateevent'],
@@ -455,23 +469,23 @@ class _CuratorScreenState extends State<CuratorScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    final updatedResult = {
-                      'score': controllers['score']!.text,
-                      'dateevent': controllers['dateevent']!.text,
-                      'subject': controllers['subject']!.text,
-                      'studentid': controllers['studentid']!.text,
-                      'numberschool': controllers['numberschool']!.text,
-                    };
-                    onSave(result['id'], updatedResult);
                     Navigator.pop(context);
                   },
-                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
+                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () {
+                    final editedResult = {
+                      'score': controllers['score']?.text ?? '',
+                      'dateevent': controllers['dateevent']?.text ?? '',
+                      'subject': controllers['subject']?.text ?? '',
+                      'studentid': controllers['studentid']?.text ?? '',
+                      'numberschool': controllers['numberschool']?.text ?? '',
+                    };
+                    onEdit(result['id'], editedResult);
                     Navigator.pop(context);
                   },
-                  child: Text('Отмена', style: TextStyle(color: Colors.red)),
+                  child: Text('Сохранить', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );

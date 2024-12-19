@@ -80,6 +80,12 @@ class _ResultsTabState extends State<ResultsTab> {
     fetchResults();
   }
 
+  Color _getScoreColor(int score) {
+    if (score >= 4) return Colors.greenAccent;
+    if (score == 3) return Colors.orangeAccent;
+    return Colors.redAccent;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +105,7 @@ class _ResultsTabState extends State<ResultsTab> {
                 controller: _searchController,
                 onChanged: _filterResults,
                 style: TextStyle(color: Colors.white),
-                cursorColor: Colors.blueAccent, // Цвет курсора
+                cursorColor: Colors.blueAccent,
                 decoration: InputDecoration(
                   hintText: 'Поиск по фамилии или имени...',
                   hintStyle: TextStyle(color: Colors.white70),
@@ -121,7 +127,12 @@ class _ResultsTabState extends State<ResultsTab> {
               child: isLoading
                   ? Center(child: CircularProgressIndicator(color: Colors.white))
                   : (filteredResults.isEmpty
-                  ? Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold)))
+                  ? Center(
+                child: Text(
+                  'Нет данных.',
+                  style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              )
                   : ListView.builder(
                 itemCount: filteredResults.length,
                 itemBuilder: (context, index) {
@@ -135,12 +146,25 @@ class _ResultsTabState extends State<ResultsTab> {
                     ),
                     child: ListTile(
                       contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      title: Text(
-                        result['student'] ?? 'Неизвестно',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            result['student'] ?? 'Неизвестно',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                          ),
+                          Text(
+                            '${result['score']}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: _getScoreColor(result['score']),
+                            ),
+                          ),
+                        ],
                       ),
                       subtitle: Text(
-                        'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Балл: ${result['score']}, Дата: ${result['dateevent']}',
+                        'Школа №${result['numberschool']}, Предмет: ${result['subject']}, Дата: ${result['dateevent']}',
                         style: TextStyle(fontSize: 14, color: Colors.white70),
                       ),
                       leading: Icon(Icons.school, color: Colors.white),

@@ -104,212 +104,110 @@ class _StudentsTabState extends State<StudentsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Темный фон страницы
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Ученики', style: TextStyle(color: Colors.white)), // Белый текст на AppBar
-        backgroundColor: Colors.grey[900], // Темный AppBar
+        title: Text('Ученики', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: students,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // Синий цвет загрузочного индикатора
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
-          } else if (snapshot.hasData) {
-            final studentList = snapshot.data!;
-            return ListView.builder(
-              itemCount: studentList.length,
-              itemBuilder: (context, index) {
-                final student = studentList[index];
-                return Card(
-                  color: Colors.grey[850], // Темный фон карточки
-                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: ListTile(
-                    title: Text(
-                      '${student['name']} ${student['surname']}',
-                      style: TextStyle(color: Colors.white), // Белый текст
-                    ),
-                    subtitle: FutureBuilder<List<dynamic>>(
-                      future: schools, // Используем schools, чтобы получить данные о школах
-                      builder: (context, snapshot) {
-                        String schoolNumber = 'Не найдено'; // Значение по умолчанию
-
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return CircularProgressIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
-                        } else if (snapshot.hasData) {
-                          final schoolList = snapshot.data!;
-                          final school = schoolList.firstWhere(
-                                (school) => school['id'] == student['numberschool'],
-                            orElse: () => {'number': 'Не найдено'},
-                          );
-                          schoolNumber = school['number'].toString();
-                        }
-
-                        return Text(
-                          'Класс: ${student['class']} | Школа №$schoolNumber',
-                          style: TextStyle(color: Colors.white70),
-                        );
-                      },
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue), // Синие кнопки редактирования
-                          onPressed: () {
-                            _showEditDialog(context, 'Редактировать ученика', student, editStudent);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red), // Красная кнопка удаления
-                          onPressed: () => deleteStudent(student['id']),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      _showEditDialog(context, 'Редактировать ученика', student, editStudent);
-                    },
+      body: Stack(
+        children: [
+          FutureBuilder<List<dynamic>>(
+            future: students,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(
-          context,
-          'Добавить ученика',
-          {'name': '', 'surname': '', 'class': '', 'numberschool': ''},
-          addStudent,
-        ),
-        backgroundColor: Colors.blueAccent, // Яркая кнопка добавления
-        child: Icon(Icons.add, color: Colors.white), // Белый плюсик
-      ),
-    );
-  }
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)),
+                );
+              } else if (snapshot.hasData) {
+                final studentList = snapshot.data!;
+                return ListView.builder(
+                  padding: EdgeInsets.only(bottom: 80),
+                  itemCount: studentList.length,
+                  itemBuilder: (context, index) {
+                    final student = studentList[index];
+                    return Card(
+                      color: Colors.grey[850],
+                      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      child: ListTile(
+                        title: Text(
+                          '${student['name']} ${student['surname']}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        subtitle: FutureBuilder<List<dynamic>>(
+                          future: schools,
+                          builder: (context, snapshot) {
+                            String schoolNumber = 'Не найдено';
 
-  void _showAddDialog(
-      BuildContext context,
-      String title,
-      Map<String, dynamic> fields,
-      Function(Map<String, dynamic>) onSave,
-      ) {
-    final controllers = fields.map((key, _) => MapEntry(key, TextEditingController()));
-    int? selectedSchool; // Хранит ID выбранной школы.
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: Colors.grey[850], // Темный фон диалога
-              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
-              content: FutureBuilder<List<dynamic>>(
-                future: schools,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
-                  } else if (snapshot.hasData) {
-                    final schoolList = snapshot.data!;
-                    return SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            controller: controllers['name'],
-                            decoration: InputDecoration(
-                              labelText: 'Имя',
-                              labelStyle: TextStyle(color: Colors.white),
-                            ),
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          TextField(
-                            controller: controllers['surname'],
-                            decoration: InputDecoration(
-                              labelText: 'Фамилия',
-                              labelStyle: TextStyle(color: Colors.white),
-                            ),
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          TextField(
-                            controller: controllers['class'],
-                            decoration: InputDecoration(
-                              labelText: 'Класс',
-                              labelStyle: TextStyle(color: Colors.white),
-                            ),
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          DropdownButton<int>(
-                            isExpanded: true,
-                            hint: Text('Выберите школу', style: TextStyle(color: Colors.white)),
-                            value: selectedSchool,
-                            items: schoolList.map((school) {
-                              return DropdownMenuItem<int>(
-                                value: school['id'],
-                                child: Text('Школа №${school['number']}', style: TextStyle(color: Colors.white)),
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
+                            } else if (snapshot.hasData) {
+                              final schoolList = snapshot.data!;
+                              final school = schoolList.firstWhere(
+                                    (school) => school['id'] == student['numberschool'],
+                                orElse: () => {'number': 'Не найдено'},
                               );
-                            }).toList(),
-                            onChanged: (int? value) {
-                              setState(() {
-                                selectedSchool = value;
-                              });
-                            },
-                            dropdownColor: Colors.grey[850], // Темный фон для выпадающего списка
-                            style: TextStyle(color: Colors.white), // Белый текст в списке
-                          ),
-                        ],
+                              schoolNumber = school['number'].toString();
+                            }
+
+                            return Text(
+                              'Класс: ${student['class']} | Школа №$schoolNumber',
+                              style: TextStyle(color: Colors.white70),
+                            );
+                          },
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                _showEditDialog(context, 'Редактировать ученика', student, editStudent);
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => deleteStudent(student['id']),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          _showEditDialog(context, 'Редактировать ученика', student, editStudent);
+                        },
                       ),
                     );
-                  } else {
-                    return Text('Нет данных.', style: TextStyle(color: Colors.white));
-                  }
-                },
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Отмена', style: TextStyle(color: Colors.white)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    final data = controllers.map((key, controller) => MapEntry(key, controller.text));
-
-                    // Проверяем, выбрана ли школа
-                    if (selectedSchool != null) {
-                      data['numberschool'] = selectedSchool.toString();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Выберите школу')),
-                      );
-                      return;
-                    }
-
-                    // Вызываем сохранение
-                    onSave(data);
-
-                    // Закрываем диалог
-                    Navigator.pop(context);
                   },
-                  child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
-                ),
-              ],
-            );
-          },
-        );
-      },
+                );
+              } else {
+                return Center(
+                  child: Text('Нет данных.', style: TextStyle(color: Colors.white)),
+                );
+              }
+            },
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: () => _showAddDialog(
+                context,
+                'Добавить ученика',
+                {'name': '', 'surname': '', 'class': '', 'numberschool': ''},
+                addStudent,
+              ),
+              backgroundColor: Colors.blueAccent,
+              child: Icon(Icons.add, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -515,71 +413,91 @@ class _ResultsTabState extends State<ResultsTab> {
         title: Text('Результаты', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.grey[900],
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: results,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
-          } else if (snapshot.hasData) {
-            final resultList = snapshot.data!;
-            return ListView.builder(
-              itemCount: resultList.length,
-              itemBuilder: (context, index) {
-                final result = resultList[index];
-                return Card(
-                  color: Colors.grey[850],
-                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: ListTile(
-                    title: Text(
-                      'Результат: ${result['score']} | Ученик: ${result['student']['name']} ${result['student']['surname']}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    subtitle: Text(
-                      'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа №${result['numberschool']['number']}',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            _showEditDialog(context, 'Редактировать результат', result, editResult);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => deleteResult(result['id']),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      _showEditDialog(context, 'Редактировать результат', result, editResult);
-                    },
+      body: Stack(
+        children: [
+          FutureBuilder<List<dynamic>>(
+            future: results,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(
-          context,
-          'Добавить результат',
-          {'score': '', 'dateevent': '', 'subject': '', 'studentid': '', 'numberschool': ''},
-          addResult,
-        ),
-        backgroundColor: Colors.blueAccent,
-        child: Icon(Icons.add, color: Colors.white),
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text('Ошибка: ${snapshot.error}',
+                      style: TextStyle(color: Colors.white)),
+                );
+              } else if (snapshot.hasData) {
+                final resultList = snapshot.data!;
+                return ListView.builder(
+                  padding: EdgeInsets.only(bottom: 80),
+                  itemCount: resultList.length,
+                  itemBuilder: (context, index) {
+                    final result = resultList[index];
+                    return Card(
+                      color: Colors.grey[850],
+                      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      child: ListTile(
+                        title: Text(
+                          'Результат: ${result['score']} | Ученик: ${result['student']['name']} ${result['student']['surname']}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа №${result['numberschool']['number']}',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                _showEditDialog(context, 'Редактировать результат', result, editResult);
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => deleteResult(result['id']),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          _showEditDialog(context, 'Редактировать результат', result, editResult);
+                        },
+                      ),
+                    );
+                  },
+                );
+              } else {
+                return Center(
+                  child: Text('Нет данных.', style: TextStyle(color: Colors.white)),
+                );
+              }
+            },
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: () => _showAddDialog(
+                context,
+                'Добавить результат',
+                {
+                  'score': '',
+                  'dateevent': '',
+                  'subject': '',
+                  'studentid': '',
+                  'numberschool': ''
+                },
+                addResult,
+              ),
+              backgroundColor: Colors.blueAccent,
+              child: Icon(Icons.add, color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -962,71 +880,76 @@ class _SchoolsTabState extends State<SchoolsTab> {
         backgroundColor: Colors.grey[900], // Черный AppBar
         iconTheme: IconThemeData(color: Colors.white), // Белые иконки
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: schools,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // Синий цвет загрузочного индикатора
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
-          } else if (snapshot.hasData) {
-            final schoolList = snapshot.data!;
-            return ListView.builder(
-              itemCount: schoolList.length,
-              itemBuilder: (context, index) {
-                final school = schoolList[index];
-                return Card(
-                  color: Colors.grey[800], // Темный фон карточки
-                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: ListTile(
-                    title: Text(
-                      'Школа №${school['number']}',
-                      style: TextStyle(color: Colors.white), // Белый текст
+      body: SafeArea(
+        child: FutureBuilder<List<dynamic>>(
+          future: schools,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // Синий цвет загрузочного индикатора
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white)));
+            } else if (snapshot.hasData) {
+              final schoolList = snapshot.data!;
+              return ListView.builder(
+                itemCount: schoolList.length,
+                itemBuilder: (context, index) {
+                  final school = schoolList[index];
+                  return Card(
+                    color: Colors.grey[800], // Темный фон карточки
+                    margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    child: ListTile(
+                      title: Text(
+                        'Школа №${school['number']}',
+                        style: TextStyle(color: Colors.white), // Белый текст
+                      ),
+                      subtitle: Text(
+                        'Адрес: ${school['address']}',
+                        style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min, // Ограничивает ширину
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit, color: Colors.blue), // Иконка редактирования
+                            onPressed: () {
+                              _showEditDialog(context, 'Редактировать школу', school, editSchool);
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
+                            onPressed: () => deleteSchool(school['id']),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        _showEditDialog(context, 'Редактировать школу', school, editSchool);
+                      },
                     ),
-                    subtitle: Text(
-                      'Адрес: ${school['address']}',
-                      style: TextStyle(color: Colors.white70), // Белый с прозрачным
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min, // Ограничивает ширину
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue), // Иконка редактирования
-                          onPressed: () {
-                            _showEditDialog(context, 'Редактировать школу', school, editSchool);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red), // Красная иконка удаления
-                          onPressed: () => deleteSchool(school['id']),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      _showEditDialog(context, 'Редактировать школу', school, editSchool);
-                    },
-                  ),
-                );
-              },
-            );
-          } else {
-            return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(
-          context,
-          'Добавить школу',
-          {'number': '', 'address': ''},
-          addSchool,
+                  );
+                },
+              );
+            } else {
+              return Center(child: Text('Нет данных.', style: TextStyle(color: Colors.white)));
+            }
+          },
         ),
-        backgroundColor: Colors.blueAccent, // Синий цвет кнопки
-        child: Icon(Icons.add, color: Colors.white), // Белый плюсик
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 20.0), // Отступ от нижнего края экрана
+        child: FloatingActionButton(
+          onPressed: () => _showAddDialog(
+            context,
+            'Добавить школу',
+            {'number': '', 'address': ''},
+            addSchool,
+          ),
+          backgroundColor: Colors.blueAccent, // Синий цвет кнопки
+          child: Icon(Icons.add, color: Colors.white), // Белый плюсик
+        ),
       ),
     );
   }

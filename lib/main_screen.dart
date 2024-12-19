@@ -28,7 +28,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Главная страница'),
+        title: Text('Главная страница', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black, // Темный фон для AppBar
         bottom: TabBar(
           controller: _tabController,
