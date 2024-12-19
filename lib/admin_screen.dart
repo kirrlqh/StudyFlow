@@ -134,9 +134,29 @@ class _StudentsTabState extends State<StudentsTab> {
                       '${student['name']} ${student['surname']}',
                       style: TextStyle(color: Colors.white), // Белый текст
                     ),
-                    subtitle: Text(
-                      'Класс: ${student['class']} | Школа: ${student['numberschool']}',
-                      style: TextStyle(color: Colors.white70), // Белый с прозрачным
+                    subtitle: FutureBuilder<List<dynamic>>(
+                      future: schools, // Используем schools, чтобы получить данные о школах
+                      builder: (context, snapshot) {
+                        String schoolNumber = 'Не найдено'; // Значение по умолчанию
+
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
+                        } else if (snapshot.hasData) {
+                          final schoolList = snapshot.data!;
+                          final school = schoolList.firstWhere(
+                                (school) => school['id'] == student['numberschool'],
+                            orElse: () => {'number': 'Не найдено'},
+                          );
+                          schoolNumber = school['number'].toString();
+                        }
+
+                        return Text(
+                          'Класс: ${student['class']} | Школа №$schoolNumber',
+                          style: TextStyle(color: Colors.white70),
+                        );
+                      },
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -304,7 +324,7 @@ class _StudentsTabState extends State<StudentsTab> {
       'surname': TextEditingController(text: item['surname']),
       'class': TextEditingController(text: item['class']),
     };
-    int? selectedSchool = item['numberschool']; // ID школы для редактирования.
+    int? selectedSchool = item['numberschool']; // ID школы для редактируемого ученика
 
     showDialog(
       context: context,
@@ -313,12 +333,12 @@ class _StudentsTabState extends State<StudentsTab> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: Colors.grey[850], // Темный фон диалога
-              title: Text(title, style: TextStyle(color: Colors.white)), // Белый текст
+              title: Text(title, style: TextStyle(color: Colors.white)),
               content: FutureBuilder<List<dynamic>>(
-                future: schools, // Данные о школах
+                future: schools,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return CircularProgressIndicator();
                   } else if (snapshot.hasError) {
                     return Text('Ошибка: ${snapshot.error}', style: TextStyle(color: Colors.white));
                   } else if (snapshot.hasData) {
@@ -331,57 +351,26 @@ class _StudentsTabState extends State<StudentsTab> {
                             controller: controllers['name'],
                             decoration: InputDecoration(
                               labelText: 'Имя',
-                              labelStyle: TextStyle(color: Colors.white), // Белая метка
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
-                              ),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white70), // Белая подсветка по умолчанию
-                              ),
-                              errorBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red), // Красная подсветка при ошибке
-                              ),
+                              labelStyle: TextStyle(color: Colors.white),
                             ),
-                            style: TextStyle(color: Colors.white), // Белый текст
-                            cursorColor: Colors.blue, // Синий цвет для курсора
+                            style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['surname'],
                             decoration: InputDecoration(
                               labelText: 'Фамилия',
-                              labelStyle: TextStyle(color: Colors.white), // Белая метка
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
-                              ),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white70), // Белая подсветка по умолчанию
-                              ),
-                              errorBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red), // Красная подсветка при ошибке
-                              ),
+                              labelStyle: TextStyle(color: Colors.white),
                             ),
-                            style: TextStyle(color: Colors.white), // Белый текст
-                            cursorColor: Colors.blue, // Синий цвет для курсора
+                            style: TextStyle(color: Colors.white),
                           ),
                           TextField(
                             controller: controllers['class'],
                             decoration: InputDecoration(
                               labelText: 'Класс',
-                              labelStyle: TextStyle(color: Colors.white), // Белая метка
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue), // Синий цвет для фокуса
-                              ),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white70), // Белая подсветка по умолчанию
-                              ),
-                              errorBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red), // Красная подсветка при ошибке
-                              ),
+                              labelStyle: TextStyle(color: Colors.white),
                             ),
-                            style: TextStyle(color: Colors.white), // Белый текст
-                            cursorColor: Colors.blue, // Синий цвет для курсора
+                            style: TextStyle(color: Colors.white),
                           ),
-                          // Выпадающий список для выбора школы
                           DropdownButton<int>(
                             isExpanded: true,
                             value: selectedSchool,
@@ -416,7 +405,6 @@ class _StudentsTabState extends State<StudentsTab> {
                   onPressed: () {
                     final data = controllers.map((key, controller) => MapEntry(key, controller.text));
 
-                    // Проверяем, выбрана ли школа
                     if (selectedSchool != null) {
                       data['numberschool'] = selectedSchool.toString();
                     } else {
@@ -426,10 +414,7 @@ class _StudentsTabState extends State<StudentsTab> {
                       return;
                     }
 
-                    // Вызываем сохранение
-                    onSave(item['id'], data);
-
-                    // Закрываем диалог
+                    onSave(item['id'], data); // Отправляем изменения для редактирования
                     Navigator.pop(context);
                   },
                   child: Text('Сохранить', style: TextStyle(color: Colors.blue)),
@@ -440,10 +425,9 @@ class _StudentsTabState extends State<StudentsTab> {
         );
       },
     );
-
-
   }
 }
+
 
 
 /// ------------------- Вкладка "Результаты" -------------------
@@ -557,7 +541,7 @@ class _ResultsTabState extends State<ResultsTab> {
                       style: TextStyle(color: Colors.white),
                     ),
                     subtitle: Text(
-                      'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа: ${result['numberschool']['number']}',
+                      'Дата: ${result['dateevent']} | Предмет: ${result['subject']} | Школа №${result['numberschool']['number']}',
                       style: TextStyle(color: Colors.white70),
                     ),
                     trailing: Row(
@@ -764,6 +748,9 @@ class _ResultsTabState extends State<ResultsTab> {
       'numberschool': TextEditingController(text: item['numberschool']?['id']?.toString() ?? ''),
     };
 
+    String? selectedStudentId = item['student']?['id']?.toString();
+    String? selectedSchoolId = item['numberschool']?['id']?.toString();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -812,6 +799,7 @@ class _ResultsTabState extends State<ResultsTab> {
                       style: TextStyle(color: Colors.white),
                       cursorColor: Colors.blue,
                     ),
+                    // Выбор ученика
                     FutureBuilder<List<dynamic>>(
                       future: students,
                       builder: (context, snapshot) {
@@ -829,6 +817,7 @@ class _ResultsTabState extends State<ResultsTab> {
                                 borderSide: BorderSide(color: Colors.blue),
                               ),
                             ),
+                            value: selectedStudentId, // Устанавливаем значение выбранного ученика
                             dropdownColor: Colors.grey[850],
                             items: studentList.map((student) {
                               return DropdownMenuItem<String>(
@@ -837,7 +826,10 @@ class _ResultsTabState extends State<ResultsTab> {
                               );
                             }).toList(),
                             onChanged: (value) {
-                              controllers['studentid']?.text = value!;
+                              setState(() {
+                                selectedStudentId = value!;
+                                controllers['studentid']?.text = value;
+                              });
                             },
                           );
                         } else {
@@ -845,6 +837,7 @@ class _ResultsTabState extends State<ResultsTab> {
                         }
                       },
                     ),
+                    // Выбор школы
                     FutureBuilder<List<dynamic>>(
                       future: schools,
                       builder: (context, snapshot) {
@@ -862,6 +855,7 @@ class _ResultsTabState extends State<ResultsTab> {
                                 borderSide: BorderSide(color: Colors.blue),
                               ),
                             ),
+                            value: selectedSchoolId, // Устанавливаем значение выбранной школы
                             dropdownColor: Colors.grey[850],
                             items: schoolList.map((school) {
                               return DropdownMenuItem<String>(
@@ -870,7 +864,10 @@ class _ResultsTabState extends State<ResultsTab> {
                               );
                             }).toList(),
                             onChanged: (value) {
-                              controllers['numberschool']?.text = value!;
+                              setState(() {
+                                selectedSchoolId = value!;
+                                controllers['numberschool']?.text = value;
+                              });
                             },
                           );
                         } else {
@@ -889,6 +886,10 @@ class _ResultsTabState extends State<ResultsTab> {
                 TextButton(
                   onPressed: () {
                     final data = controllers.map((key, controller) => MapEntry(key, controller.text));
+
+                    // Добавляем выбранных ученика и школу в данные
+                    data['studentid'] = selectedStudentId!;
+                    data['numberschool'] = selectedSchoolId!;
 
                     // Вызываем сохранение
                     onSave(item['id'], data);
